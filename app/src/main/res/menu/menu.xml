@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.carlos.myapplication.MainActivity">
+
+    <item
+        android:id="@+id/menu_wifi"
+        android:orderInCategory="1"
+        android:title="配对设备"
+        android:icon="@drawable/ic_add_circle_black_24dp"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/menu_setting"
+        android:orderInCategory="1"
+        android:title="设置"
+        android:icon="@drawable/ic_settings_black_24dp"
+        app:showAsAction="always" />
+
+</menu>
