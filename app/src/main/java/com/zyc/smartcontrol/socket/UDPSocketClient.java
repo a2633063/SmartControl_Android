@@ -7,6 +7,7 @@ import android.os.Message;
 import android.util.Log;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -139,6 +140,10 @@ public class UDPSocketClient {
         UDPsend(message.getBytes());
     }
     public void UDPsend(final byte[] message) {
+        int[] Redat = new int[message.length];
+        for (int i = 0; i < message.length; i++) Redat[i] = (message)[i] & 0xff;
+        Log.d(Tag,"send:"+Arrays.toString(Redat));
+
         messageQueue.add(message);
         try {
             mSendThread.interrupt();

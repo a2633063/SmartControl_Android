@@ -3,6 +3,7 @@ package com.zyc.smartcontrol.clock;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -15,23 +16,30 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.zyc.MyFunction;
@@ -67,17 +75,17 @@ public class ClockFragment extends Fragment {
     Switch sw_show_opposite;
     SeekBar sb_brightness;
     CheckBox ck_auto_brightness;
+
+    private ProgressDialog pd;
     //endregion
 
-    Map<String, Object> item = new HashMap<String, Object>();
-    List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
+    Map<String, Object> item = new HashMap<>();
+    List<Map<String, Object>> data = new ArrayList<>();
     ClockAlarmListViewAdapter adapter;
 
     //UDP
     UDPSocketClient UdpSocketClient;
     String IP;
-
-    private ProgressDialog pd;
 
     int deviceNum;
 
@@ -96,39 +104,6 @@ public class ClockFragment extends Fragment {
         @Override
         public void handleMessage(@NonNull Message msg) {
             switch (msg.what) {
-                //region tcp接收数据
-                case TCPSocketClient.HANDLE_TCP_TYPE:
-//                    Toast.makeText(getContext(), Restr, Toast.LENGTH_SHORT).show();
-                    String[] strarray = ((String) msg.obj).split("\\n");
-                    for (String s : strarray) {
-                        String str = "";
-                        int val = 0;
-
-                    }
-                    break;
-                //endregion
-                //region tcp错误
-                case TCPSocketClient.HANDLE_TCP_ERROR:
-                    switch (msg.arg1) {
-                        case 0:
-                            log.setText(log.getText() + "\n已连接:" + IP);
-                            break;
-                        case -2:
-                            log.setText(log.getText() + "\n连接丢失");
-                            break;
-                        case -1:
-                            log.setText(log.getText() + "\n连接失败");
-                            break;
-                        case 1:
-                            log.setText(log.getText() + "\n已断开");
-                            break;
-                        case 2:
-                            log.setText(log.getText() + "\n设置改变,重新连接....");
-                            break;
-                    }
-                    break;
-                //endregion
-
                 //region UDP广播获取设备IP地址成功
                 case 1:
                     IP = mSharedPreferences.getString("LAN_IP", null);
@@ -181,17 +156,33 @@ public class ClockFragment extends Fragment {
         Log.d(Tag, "设置文件:" + "Setting" + deviceNum);
         mEditor = mSharedPreferences.edit();
 
+        //region Listview 闹钟列表
         item = new HashMap<String, Object>();
         item.put("on", false);
         item.put("repeat", 0);
         item.put("time", "00:00");
-
+        item.put("hour", 0);
+        item.put("minute", 0);
         for (int i = data.size(); i < 5; i++)
             data.add(item);
         adapter = new ClockAlarmListViewAdapter(getActivity(), data);
         ListView ListView = (ListView) view.findViewById(R.id.lv);
         ListView.setAdapter(adapter);
+        adapter.setOnItemSwitchCheckedChangeListener(new ClockAlarmListViewAdapter.onItemSwitchCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(boolean isChecked, int position1) {
+                sendAlarm(position1);
+            }
+        });
+        ListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                windowAlarmSet(position);
+            }
+        });
+        //endregion
 
+        //region 亮度拖动条
         sb_brightness = (SeekBar) view.findViewById(R.id.sb_brightness);
         sb_brightness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -210,13 +201,17 @@ public class ClockFragment extends Fragment {
                 UdpSocketClient.UDPsend(new byte[]{(byte) 0xa5, 0x5a, 0x6, (byte) 0xff, 0x01, (byte) sb_brightness.getProgress()});
             }
         });
+        //endregion
+        //region 显示方向
         sw_show_opposite = (Switch) view.findViewById(R.id.sw_show_opposite);
         sw_show_opposite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                UdpSocketClient.UDPsend(new byte[]{(byte) 0xa5, 0x5a, 0x6, (byte) 0xff, 0x04, (byte)(isChecked?1:0)});
+                UdpSocketClient.UDPsend(new byte[]{(byte) 0xa5, 0x5a, 0x6, (byte) 0xff, 0x04, (byte) (isChecked ? 1 : 0)});
             }
         });
+        //endregion
+        //region 自动亮度开关
         ck_auto_brightness = (CheckBox) view.findViewById(R.id.ck_auto_brightness);
         ck_auto_brightness.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -231,7 +226,9 @@ public class ClockFragment extends Fragment {
                 }
             }
         });
+        //endregion
 
+        //region 闹钟开关
         AlarmOn = (Switch) view.findViewById(R.id.sw_alarm_on);
         AlarmOn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -243,7 +240,9 @@ public class ClockFragment extends Fragment {
 
             }
         });
+        //endregion
 
+        //region Log文本
         log = (TextView) view.findViewById(R.id.tv_log);
         final ScrollView scrollView = (ScrollView) view.findViewById(R.id.scrollView);
         log.addTextChangedListener(new TextWatcher() {
@@ -266,6 +265,7 @@ public class ClockFragment extends Fragment {
                 });
             }
         });
+        //endregion
         DateFormat df = new SimpleDateFormat("---- yyyy/hh/dd HH:mm:ss ----");
         log.setText(df.format(new Date()));
         pd = ProgressDialog.show(getActivity(), "", "loading.....");
@@ -279,8 +279,8 @@ public class ClockFragment extends Fragment {
         super.onResume();
 
         if (UdpSocketClient == null) {
-            DeviceConnect();}
-
+            DeviceConnect();
+        }
 
 
     }
@@ -329,7 +329,7 @@ public class ClockFragment extends Fragment {
 
                             //region 获取IP地址
                             case 0x00:
-                                if(UDPgetIP_flag>1) break;
+                                if (UDPgetIP_flag > 1) break;
                                 UDPhandler.removeMessages(2);
                                 int[] mac = new int[6];
                                 int[] ip = new int[4];
@@ -378,10 +378,15 @@ public class ClockFragment extends Fragment {
                                 item.put("on", Redat[6] != 0);
                                 item.put("repeat", Redat[7]);
                                 item.put("hour", Redat[8]);
-                                item.put("time", String.format("%02d:%02d", Redat[8], Redat[9]));
                                 item.put("minute", Redat[9]);
+                                item.put("time", String.format("%02d:%02d", Redat[8], Redat[9]));
                                 data.set(Redat[5], item);
                                 adapter.notifyDataSetChanged();
+
+                                Message msg3 = new Message();
+                                msg3.what = 0;
+                                msg3.arg1 = Redat[5];
+                                handler.sendMessageDelayed(msg3, 100);
                                 break;
                             //endregion
                             //region 获取显示方向
@@ -431,4 +436,170 @@ public class ClockFragment extends Fragment {
         }
     }
 
+
+    //region 弹窗
+    CheckBox chk_repeat_once;
+    CheckBox chk_repeat_everyday;
+    CheckBox chk_repeat_week;
+    int weekVal = 0;
+    final String[] mWeekItems = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
+
+    void windowAlarmSet(final int id) {
+        final View popupView = getActivity().getLayoutInflater().inflate(R.layout.window_alarm_set, null);
+        final PopupWindow window = new PopupWindow(popupView, -2, -2, true);
+        window.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        WindowManager.LayoutParams lp = getActivity().getWindow().getAttributes();
+        lp.alpha = 0.3f; //0.0-1.0
+        getActivity().getWindow().setAttributes(lp);
+
+
+        //region 控件初始化
+        final TimePicker timePicker = (TimePicker) popupView.findViewById(R.id.timePicker);
+        timePicker.setIs24HourView(true);
+        chk_repeat_once = (CheckBox) popupView.findViewById(R.id.chk_repeat_once);
+        chk_repeat_everyday = (CheckBox) popupView.findViewById(R.id.chk_repeat_everyday);
+        chk_repeat_week = (CheckBox) popupView.findViewById(R.id.chk_repeat_week);
+        chk_repeat_once.setOnClickListener(windowOnClickListener);
+        chk_repeat_everyday.setOnClickListener(windowOnClickListener);
+        chk_repeat_week.setOnClickListener(windowOnClickListener);
+
+        popupView.findViewById(R.id.btn_confirm).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                adapter.put(id, "repeat", weekVal);
+                adapter.put(id, "hour", timePicker.getHour());
+                adapter.put(id, "minute", timePicker.getMinute());
+                adapter.put(id, "on", ((Map<String, Object>) adapter.getItem(id)).get("on"));
+                adapter.notifyDataSetChanged();
+                window.dismiss();
+                sendAlarm(id);
+            }
+        });
+        popupView.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                window.dismiss();
+            }
+        });
+        //endregion
+        //region 初始化显示
+        Map<String, Object> item = (Map<String, Object>) adapter.getItem(id);
+        weekVal = (int) item.get("repeat");
+        timePicker.setHour((int) item.get("hour"));
+        timePicker.setMinute((int) item.get("minute"));
+
+        String s = "自定义";
+        if (weekVal == 0) {
+            chk_repeat_once.setChecked(true);
+            chk_repeat_everyday.setChecked(false);
+            chk_repeat_week.setChecked(false);
+        } else if (weekVal >= 0x7f) {
+            chk_repeat_once.setChecked(false);
+            chk_repeat_everyday.setChecked(true);
+            chk_repeat_week.setChecked(false);
+        } else {
+            chk_repeat_once.setChecked(false);
+            chk_repeat_everyday.setChecked(false);
+            chk_repeat_week.setChecked(true);
+            for (int i = 0; i < 7; i++)
+                if ((weekVal & (1 << i)) != 0) s += "," + mWeekItems[i];
+        }
+        chk_repeat_week.setText(s.replaceFirst(",", ":"));
+        //endregion
+
+        window.setBackgroundDrawable(new BitmapDrawable());
+        window.setOutsideTouchable(true);
+        window.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                WindowManager.LayoutParams lp = getActivity().getWindow().getAttributes();
+                lp.alpha = 1.0f; //0.0-1.0
+                getActivity().getWindow().setAttributes(lp);
+            }
+        });
+        window.update();
+        window.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+    }
+
+    //region 弹窗CheckBox监听事件
+    CompoundButton.OnClickListener windowOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            chk_repeat_once.setChecked(false);
+            chk_repeat_everyday.setChecked(false);
+            chk_repeat_week.setChecked(false);
+            ((CheckBox) v).setChecked(true);
+            if (chk_repeat_week.isChecked()) {
+                if (weekVal >= 0x7f) weekVal = 0;
+                //region 选择星期弹窗
+                boolean[] mItemsCheck = new boolean[7];
+                for (int i = 0; i < 7; i++) {
+                    mItemsCheck[i] = ((weekVal & (1 << i)) != 0);
+                }
+                final ArrayList<Integer> MultiChoiceID = new ArrayList<Integer>();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                MultiChoiceID.clear();
+                builder.setTitle("多项选择");
+                builder.setMultiChoiceItems(mWeekItems, mItemsCheck,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton, boolean isChecked) {
+                                if (isChecked) weekVal |= (1 << (whichButton));
+                                else weekVal &= (~(1 << (whichButton)));
+                            }
+                        });
+                builder.setPositiveButton("确定", null);
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        String s = "自定义";
+                        if (weekVal == 0) {
+                            chk_repeat_once.setChecked(true);
+                            chk_repeat_everyday.setChecked(false);
+                            chk_repeat_week.setChecked(false);
+                        } else if (weekVal >= 0x7f) {
+                            chk_repeat_once.setChecked(false);
+                            chk_repeat_everyday.setChecked(true);
+                            chk_repeat_week.setChecked(false);
+                        } else {
+                            for (int i = 0; i < 7; i++) {
+                                if ((weekVal & (1 << i)) != 0) s += "," + mWeekItems[i];
+                            }
+                        }
+                        chk_repeat_week.setText(s.replaceFirst(",", ":"));
+
+                        Log.d(Tag, "set repeat:" + weekVal);
+                    }
+                });
+                builder.create().show();
+                //endregion
+            } else if (chk_repeat_everyday.isChecked()) {
+                weekVal = 0x80;
+                chk_repeat_week.setText("自定义");
+            } else if (chk_repeat_once.isChecked()) {
+                weekVal = 0x0;
+                chk_repeat_week.setText("自定义");
+            }
+        }
+    };
+    //endregion
+    //endregion
+
+    //region 功能子函数
+    void sendAlarm(int x) {
+        if (UdpSocketClient == null) {
+            UdpSocketClient = new UDPSocketClient(getContext(), UDPhandler, IP, 12345);
+        }
+        byte[] data = new byte[]{(byte) 0xa5, 0x5a, 0x0a, (byte) 0xff, 0x03, (byte) x, 0, 0, 0, 0};
+
+        Map<String, Object> item = (Map<String, Object>) adapter.getItem(x);
+
+        data[5] = (byte) x;
+        data[6] = (byte) ((boolean) item.get("on") ? 1 : 0);
+        data[7] = (byte) ((int) item.get("repeat"));
+        data[8] = (byte) ((int) item.get("hour"));
+        data[9] = (byte) ((int) item.get("minute"));
+        UdpSocketClient.UDPsend(data);
+    }
+    //endregion
 }

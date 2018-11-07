@@ -7,10 +7,13 @@ package com.zyc.smartcontrol.clock;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Switch;
@@ -18,7 +21,11 @@ import android.widget.TextView;
 
 import com.zyc.smartcontrol.R;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 
@@ -26,6 +33,7 @@ public class ClockAlarmListViewAdapter extends BaseAdapter {
 
     private Activity context;
     private List mdata;
+    private List<Boolean> alarmSwitch=new ArrayList<Boolean>();
     private LayoutInflater inflater;
     private int last_year = 0, last_month = 0;
     final static String[] week = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
@@ -33,6 +41,7 @@ public class ClockAlarmListViewAdapter extends BaseAdapter {
     public ClockAlarmListViewAdapter(Activity context, List data) {
         this.context = context;
         this.mdata = data;
+        for(int i=0;i<mdata.size();i++) alarmSwitch.add(false);
         initLayoutInflater();
     }
 
@@ -47,12 +56,14 @@ public class ClockAlarmListViewAdapter extends BaseAdapter {
     public Object getItem(int position) {
         return mdata.get(position);
     }
-
+    public void put(int position,String key,Object object) {
+        ((Map<String, Object>) mdata.get(position)).put(key,object);
+    }
     public long getItemId(int position) {
         return 0;
     }
 
-    public View getView(int position1, View convertView, ViewGroup parent) {
+    public View getView(final int position1, View convertView, ViewGroup parent) {
         ViewHolder holder = null;
         View view = null;
         final int position = position1;
@@ -69,12 +80,10 @@ public class ClockAlarmListViewAdapter extends BaseAdapter {
             view = convertView;
             holder = (ViewHolder) view.getTag();
         }
-//        item.put("on", false);
-//        item.put("repeat",0);
-//        item.put("hour", 0);
-//        item.put("minute", 0);
+        //holder.tv_time.setText(((Map<String, Object>) mdata.get(position)).get("time").toString());
+        Map<String, Object> item=((Map<String, Object>) mdata.get(position));
 
-        holder.tv_time.setText(((Map<String, Object>) mdata.get(position)).get("time").toString());
+        holder.tv_time.setText(String.format("%02d:%02d",(int)item.get("hour"),(int)item.get("minute")));
         holder.sw_on.setChecked((boolean) ((Map<String, Object>) mdata.get(position)).get("on"));
         int repeat = (int) ((Map<String, Object>) mdata.get(position)).get("repeat");
         if (repeat == 0) holder.tv_repeat.setText("一次");
@@ -88,14 +97,31 @@ public class ClockAlarmListViewAdapter extends BaseAdapter {
             }
             holder.tv_repeat.setText(s.replaceFirst(",",""));
         }
-//        holder.tv_repeat.setText(((Map<String, Object>) mdata.get(position)).get("reward").toString());
-//        holder.sw_on.setText(
-//                ((Map<String, Object>) mdata.get(position)).get("val").toString()
-//                        + "/"
-//                        + ((Map<String, Object>) mdata.get(position)).get("total").toString()
-//        );
-
+        if(mOnItemSwitchCheckedChangeListener!=null) {
+            holder.sw_on.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("adapter","check"+position+":"+((Switch)v).isChecked());
+                    ((Map<String, Object>) mdata.get(position)).put("on",((Switch)v).isChecked());
+                    mOnItemSwitchCheckedChangeListener.onCheckedChanged(((Switch)v).isChecked(), position);
+                }
+            });
+        }
         return convertView;
+    }
+
+
+    /**
+     * 删除按钮的监听接口
+     */
+    public interface onItemSwitchCheckedChangeListener {
+        void onCheckedChanged(boolean isChecked,int position1);
+    }
+
+    private onItemSwitchCheckedChangeListener mOnItemSwitchCheckedChangeListener;
+
+    public void setOnItemSwitchCheckedChangeListener(onItemSwitchCheckedChangeListener monItemSwitchCheckedChangeListener) {
+        this.mOnItemSwitchCheckedChangeListener = monItemSwitchCheckedChangeListener;
     }
 
     private class ViewHolder {
