@@ -13,7 +13,9 @@ import android.view.MenuItem;
 
 import com.iot.esptouch.demo_activity.EsptouchDemoActivity;
 import com.zyc.smartcontrol.button.ButtonFragment;
+import com.zyc.smartcontrol.clock.ClockFragment;
 import com.zyc.smartcontrol.button.setting.ButtonSettingActivity;
+import com.zyc.smartcontrol.clock.setting.ClockSettingActivity;
 import com.zyc.smartcontrol.rgb.RGBFragment;
 import com.zyc.smartcontrol.rgb.setting.RGBSettingActivity;
 
@@ -41,16 +43,18 @@ public class MainActivity extends AppCompatActivity {
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
 
         fragmentArray = new ArrayList<Fragment>();
-        fragmentArray.add(new RGBFragment(0));
-        fragmentArray.add(new ButtonFragment(1));
+        fragmentArray.add(new ClockFragment(0));
+        fragmentArray.add(new RGBFragment(1));
+        fragmentArray.add(new ButtonFragment(2));
         ArrayList<String> fragmentTitle = new ArrayList<>(
                 asList(
-                        "RGB设置", "Button设置"
+                        "Clock设置","RGB设置", "Button设置"
                 ));
         adapter = new FragmentAdapter(getSupportFragmentManager(), fragmentArray, fragmentTitle);
 
         mViewPager.setAdapter(adapter);
         mViewPager.setAdapter(new FragmentAdapter(getSupportFragmentManager(), fragmentArray, null));
+        mViewPager.setOffscreenPageLimit(4);
         mViewPager.setCurrentItem(mSharedPreferences.getInt("page",0));
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -94,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
                     intent = new Intent(MainActivity.this, RGBSettingActivity.class);
                 } else if (fragmentArray.get(mViewPager.getCurrentItem()).getClass().equals(ButtonFragment.class)) {
                     intent = new Intent(MainActivity.this, ButtonSettingActivity.class);
+                } else if (fragmentArray.get(mViewPager.getCurrentItem()).getClass().equals(ClockFragment.class)) {
+                    intent = new Intent(MainActivity.this, ClockSettingActivity.class);
                 } else {
                     return true;
                 }

@@ -34,6 +34,7 @@ import com.zyc.smartcontrol.socket.UDPSocketClient;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Timer;
@@ -409,6 +410,8 @@ public class ButtonFragment extends Fragment {
     String[] UDPgetIP = new String[2];
     int UDPgetIP_flag = 0;   //获取到IP地址,连续2次获取到相同的IP地址才确认
     int UDPnum = 0;//记录广播次数
+    @SuppressLint("HandlerLeak")    //Warning:忽略此警告可能会导致严重的内存泄露
+    //TODO 处理handler可能会导致的内存泄露问题
     private Handler UDPhandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -427,7 +430,10 @@ public class ButtonFragment extends Fragment {
                     }
                     break;
                 case UDPSocketClient.HANDLE_UDP_TYPE:
-                    String ReStr = (String) msg.obj;
+                    int[] Redat = new int[msg.arg1];
+                    for (int i = 0; i < msg.arg1; i++) Redat[i] = ((byte[]) msg.obj)[i] & 0xff;
+                    Log.d(Tag, "getData:" + Arrays.toString(Redat));
+                    String ReStr = Arrays.toString(Redat);
                     if (ReStr.startsWith(UDPdeviceReport_ok) && ReStr.length() <= UDPdeviceReport_ok.length() + 33) {
                         UDPhandler.removeMessages(2);
                         if (UDPgetIP_flag > 1) break;
@@ -461,7 +467,7 @@ public class ButtonFragment extends Fragment {
     private void UDPgetIP() {
         UDPgetIP_flag = 0;
         UDPnum = 0;
-        UdpSocketClient = new UDPSocketClient(UDPhandler, "255.255.255.255", 10191);
+        UdpSocketClient = new UDPSocketClient(getContext(),UDPhandler, "255.255.255.255", 10191);
         UDPgetIP_flag = 0;
         UdpSocketClient.UDPsend(UDPdeviceReport);
         UDPnum = 1;

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#202020"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <Switch
+            android:id="@+id/sw_alarm_on"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#606060"
+            android:padding="10dp"
+            android:textSize="30dp"
+            android:text="闹钟开关" />
+
+        <ListView
+            android:id="@+id/lv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#404040"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp" />
+    </LinearLayout>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="10dp">
+
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        app:srcCompat="@drawable/ic_wb_sunny_black_24dp" />
+
+    <SeekBar
+        android:id="@+id/sb_brightness"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:max="7"
+        android:progress="3" />
+
+    <CheckBox
+        android:id="@+id/ck_auto_brightness"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="" />
+</LinearLayout>
+    <Switch
+        android:id="@+id/sw_show_opposite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:paddingBottom="0dp"
+        android:paddingTop="0dp"
+        android:textSize="20dp"
+        android:text="显示方向" />
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="20sp"
+        android:addStatesFromChildren="false"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="18sp" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

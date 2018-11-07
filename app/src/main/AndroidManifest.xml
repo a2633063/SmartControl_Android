@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -22,6 +21,7 @@
         </activity>
         <activity android:name=".rgb.setting.RGBSettingActivity"></activity>
         <activity android:name=".button.setting.ButtonSettingActivity"></activity>
+        <activity android:name=".clock.setting.ClockSettingActivity"></activity>
         <activity android:name="com.iot.esptouch.demo_activity.EsptouchDemoActivity"></activity>
     </application>
 

@@ -506,7 +506,7 @@ public class RGBFragment extends Fragment {
     private void UDPgetIP() {
         UDPgetIP_flag = 0;
         UDPnum = 0;
-        UdpSocketClient = new UDPSocketClient(UDPhandler, "255.255.255.255", 10191);
+        UdpSocketClient = new UDPSocketClient(getContext(),UDPhandler, "255.255.255.255", 10191);
         UDPgetIP_flag = 0;
         UdpSocketClient.UDPsend(UDPdeviceReport);
         UDPnum = 1;
