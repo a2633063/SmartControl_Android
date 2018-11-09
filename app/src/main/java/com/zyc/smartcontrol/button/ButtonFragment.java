@@ -432,13 +432,13 @@ public class ButtonFragment extends Fragment {
                 case UDPSocketClient.HANDLE_UDP_TYPE:
                     int[] Redat = new int[msg.arg1];
                     for (int i = 0; i < msg.arg1; i++) Redat[i] = ((byte[]) msg.obj)[i] & 0xff;
-                    Log.d(Tag, "getData:" + Arrays.toString(Redat));
-                    String ReStr = Arrays.toString(Redat);
+//                    Log.d(Tag, "getData:" + Arrays.toString(Redat));
+                    String ReStr = new String((byte[])msg.obj,0,msg.arg1);
                     if (ReStr.startsWith(UDPdeviceReport_ok) && ReStr.length() <= UDPdeviceReport_ok.length() + 33) {
                         UDPhandler.removeMessages(2);
                         if (UDPgetIP_flag > 1) break;
                         UDPgetIP[UDPgetIP_flag] = ReStr.substring(UDPdeviceReport_ok.length(), ReStr.length());
-//                        Log.i(Tag, "UDP get ip " + UDPgetIP_flag + ":" + UDPgetIP[UDPgetIP_flag]);
+//                       Log.i(Tag, "UDP get ip " + UDPgetIP_flag + ":" + UDPgetIP[UDPgetIP_flag]);
                         UDPgetIP_flag++;
 
                         if (UDPgetIP_flag > 1) {
@@ -469,9 +469,9 @@ public class ButtonFragment extends Fragment {
         UDPnum = 0;
         UdpSocketClient = new UDPSocketClient(getContext(),UDPhandler, "255.255.255.255", 10191);
         UDPgetIP_flag = 0;
-        UdpSocketClient.UDPsend(UDPdeviceReport);
+        //UdpSocketClient.UDPsend(UDPdeviceReport);
         UDPnum = 1;
-        UDPhandler.sendEmptyMessageDelayed(2, 400);    //200ms后再次发送 共5次
+        UDPhandler.sendEmptyMessageDelayed(2, 0);    //200ms后再次发送 共5次
     }
 
     //endregion

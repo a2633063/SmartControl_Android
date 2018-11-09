@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion '28.0.2'
     defaultConfig {
         applicationId "com.zyc.smartcontrol"
         minSdkVersion 23
@@ -14,6 +13,8 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            aaptOptions.cruncherEnabled = false
+            aaptOptions.useNewCruncher = false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -24,5 +25,4 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:25.+'
     implementation 'com.android.support.constraint:constraint-layout:1.+'
     testImplementation 'junit:junit:4.12'
-    implementation 'com.android.support:gridlayout-v7:25.+'
 }

@@ -66,11 +66,8 @@ public class UDPSocketClient {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (msg.what == 2) {
-                try {
+                if(mReceiveThread != null)
                     mReceiveThread.interrupt();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
                 mReceiveThread = null;
                 mReceiveThread = new ReceiveThread();
                 mReceiveThread.start();
@@ -92,7 +89,6 @@ public class UDPSocketClient {
                 byte[] datas = messageQueue.get(0);
                 final DatagramPacket packet = new DatagramPacket(datas, datas.length, InetAddress.getByName(host), port);
                 mSocket.send(packet);
-                Log.d("ConnectManager", "send success data is:" + datas.toString());
                 messageQueue.remove(0);
 
             } catch (UnknownHostException e) {
@@ -116,7 +112,11 @@ public class UDPSocketClient {
                 mSocket.receive(packet);
 
                 String receiveMsg = new String(packet.getData()).trim();
-                Log.d("ConnectManager", "receive msg data is:" + receiveMsg);
+
+                int[] Redat = new int[packet.getLength()];
+                for (int i = 0; i < Redat.length; i++) Redat[i] = (packet.getData())[i] & 0xff;
+                Log.d(Tag,"UDP get:"+new String(packet.getData(),0,packet.getLength())+",["+Arrays.toString(Redat)+"]");
+
                 Message msg=new Message();
                 msg.what = HANDLE_UDP_TYPE;
                 msg.obj = packet.getData();
@@ -142,14 +142,11 @@ public class UDPSocketClient {
     public void UDPsend(final byte[] message) {
         int[] Redat = new int[message.length];
         for (int i = 0; i < message.length; i++) Redat[i] = (message)[i] & 0xff;
-        Log.d(Tag,"send:"+Arrays.toString(Redat));
+        Log.d(Tag,"UDP send:"+new String(message)+",["+Arrays.toString(Redat)+"]");
 
         messageQueue.add(message);
-        try {
+        if(mSendThread != null)
             mSendThread.interrupt();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         mSendThread = null;
         mSendThread = new SendThread();
         mSendThread.start();

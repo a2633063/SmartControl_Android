@@ -454,6 +454,8 @@ public class RGBFragment extends Fragment {
     int UDPnum = 0;//记录广播次数
     final static String UDPdeviceReport = "Device Report!!";
     final static String UDPdeviceReport_ok = "I'm button:";
+    @SuppressLint("HandlerLeak")    //Warning:忽略此警告可能会导致严重的内存泄露
+    //TODO 处理handler可能会导致的内存泄露问题
     private Handler UDPhandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -472,7 +474,7 @@ public class RGBFragment extends Fragment {
                     }
                     break;
                 case UDPSocketClient.HANDLE_UDP_TYPE:
-                    String ReStr = (String) msg.obj;
+                    String ReStr =  new String((byte[])msg.obj);
                     if (ReStr.startsWith(UDPdeviceReport_ok) && ReStr.length() <= UDPdeviceReport_ok.length() + 33) {
                         UDPhandler.removeMessages(2);
                         if (UDPgetIP_flag > 1) break;
