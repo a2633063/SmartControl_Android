@@ -7,7 +7,7 @@
 
 基于stc51+esp8266的RGB灯:(过时,未上传到github)
 
-> 由于,数据格式混乱,页面管理不方便,设备不支持多个相同设备,停止更新此项目,整理后重新开发,请跳转至 https://github.com/a2633063/SmartControl_Android_MQTT (可能当前为公开此库)
+> 由于,数据格式混乱,页面管理不方便,设备不支持多个相同设备,停止更新此项目,整理后重新开发,请跳转至 https://github.com/a2633063/SmartControl_Android_MQTT (可能当前未公开此库)
 
  ![时钟](https://github.com/a2633063/SmartControl_Android/raw/master/_Screenshot/%E6%97%B6%E9%92%9F.png)
  ![RGB灯](https://raw.githubusercontent.com/a2633063/SmartControl_Android/master/_Screenshot/%E7%81%AF.png)
