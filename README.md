@@ -1,7 +1,10 @@
 # SmartControl_Android
 本项目为SmartControl系列安卓控制端.控制下位机:
+
 基于esp8266的wifi实时时钟:https://github.com/a2633063/ESP8266_Clock
+
 基于esp8266的ButtonMate:https://github.com/a2633063/SmartControl_ButtonMate_ESP8266
+
 基于stc51+esp8266的RGB灯:(过时,未上传到github)
 
 > 由于,数据格式混乱,页面管理不方便,设备不支持多个相同设备,停止更新此项目,整理后重新开发,请跳转至 https://github.com/a2633063/SmartControl_Android_MQTT
